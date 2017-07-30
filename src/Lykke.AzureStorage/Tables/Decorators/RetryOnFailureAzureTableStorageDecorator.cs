@@ -29,7 +29,7 @@ namespace AzureStorage.Tables.Decorators
         private readonly int _onGettingRetryCount;
         private readonly RetrySrvice _retryService;
 
-        public RetryOnFailureAzureTableStorageDecorator(INoSQLTableStorage<TEntity> impl, int onModificationsRetryCount = 10, int onGettingRetryCount = 1)
+        public RetryOnFailureAzureTableStorageDecorator(INoSQLTableStorage<TEntity> impl, int onModificationsRetryCount = 10, int onGettingRetryCount = 1, TimeSpan? retryDelay = null)
         {
             _impl = impl ?? throw new ArgumentNullException(nameof(impl));
 
@@ -45,19 +45,21 @@ namespace AzureStorage.Tables.Decorators
 
             _onModificationsRetryCount = onModificationsRetryCount;
             _onGettingRetryCount = onGettingRetryCount;
-            _retryService = new RetrySrvice(e =>
-            {
-                var storageException = e as StorageException;
-                var noRetryStatusCodes = new[]
+            _retryService = new RetrySrvice(
+                retryDelay: retryDelay ?? TimeSpan.Zero,
+                exceptionFilter: e =>
                 {
-                    HttpStatusCode.Conflict,
-                    HttpStatusCode.BadRequest
-                };
+                    var storageException = e as StorageException;
+                    var noRetryStatusCodes = new[]
+                    {
+                        HttpStatusCode.Conflict,
+                        HttpStatusCode.BadRequest
+                    };
 
-                return storageException != null && noRetryStatusCodes.Contains((HttpStatusCode)storageException.RequestInformation.HttpStatusCode)
-                    ? RetrySrvice.ExceptionFilterResult.ThrowImmediately
-                    : RetrySrvice.ExceptionFilterResult.ThrowAfterRetries;
-            });
+                    return storageException != null && noRetryStatusCodes.Contains((HttpStatusCode) storageException.RequestInformation.HttpStatusCode)
+                        ? RetrySrvice.ExceptionFilterResult.ThrowImmediately
+                        : RetrySrvice.ExceptionFilterResult.ThrowAfterRetries;
+                });
         }
 
         public IEnumerator<TEntity> GetEnumerator() => _retryService.Retry(_impl.GetEnumerator, _onGettingRetryCount);
