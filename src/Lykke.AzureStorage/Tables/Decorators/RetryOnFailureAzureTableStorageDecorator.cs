@@ -27,7 +27,7 @@ namespace AzureStorage.Tables.Decorators
         private readonly INoSQLTableStorage<TEntity> _impl;
         private readonly int _onModificationsRetryCount;
         private readonly int _onGettingRetryCount;
-        private readonly RetrySrvice _retryService;
+        private readonly RetryService _retryService;
 
         public RetryOnFailureAzureTableStorageDecorator(INoSQLTableStorage<TEntity> impl, int onModificationsRetryCount = 10, int onGettingRetryCount = 1, TimeSpan? retryDelay = null)
         {
@@ -45,7 +45,7 @@ namespace AzureStorage.Tables.Decorators
 
             _onModificationsRetryCount = onModificationsRetryCount;
             _onGettingRetryCount = onGettingRetryCount;
-            _retryService = new RetrySrvice(
+            _retryService = new RetryService(
                 retryDelay: retryDelay ?? TimeSpan.Zero,
                 exceptionFilter: e =>
                 {
@@ -57,8 +57,8 @@ namespace AzureStorage.Tables.Decorators
                     };
 
                     return storageException != null && noRetryStatusCodes.Contains((HttpStatusCode) storageException.RequestInformation.HttpStatusCode)
-                        ? RetrySrvice.ExceptionFilterResult.ThrowImmediately
-                        : RetrySrvice.ExceptionFilterResult.ThrowAfterRetries;
+                        ? RetryService.ExceptionFilterResult.ThrowImmediately
+                        : RetryService.ExceptionFilterResult.ThrowAfterRetries;
                 });
         }
 

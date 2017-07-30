@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Lykke.AzureStorage
 {
-    internal class RetrySrvice
+    internal class RetryService
     {
         public enum ExceptionFilterResult
         {
@@ -14,18 +14,18 @@ namespace Lykke.AzureStorage
         private readonly TimeSpan _retryDelay;
         private readonly Func<Exception, ExceptionFilterResult> _exceptionFilter;
 
-        public RetrySrvice(TimeSpan retryDelay) :
+        public RetryService(TimeSpan retryDelay) :
             this(retryDelay, e => ExceptionFilterResult.ThrowAfterRetries)
 
         {
         }
 
-        public RetrySrvice(Func<Exception, ExceptionFilterResult> exceptionFilter) :
+        public RetryService(Func<Exception, ExceptionFilterResult> exceptionFilter) :
             this(TimeSpan.Zero, exceptionFilter)
         {
         }
 
-        public RetrySrvice(TimeSpan retryDelay, Func<Exception, ExceptionFilterResult> exceptionFilter)
+        public RetryService(TimeSpan retryDelay, Func<Exception, ExceptionFilterResult> exceptionFilter)
         {
             _retryDelay = retryDelay;
             _exceptionFilter = exceptionFilter;
